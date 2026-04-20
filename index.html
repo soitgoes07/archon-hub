@@ -25,7 +25,7 @@
     }
   }
   body { font-family:var(--font); background:var(--bg3); color:var(--text); font-size:15px; min-height:100vh; }
-  .app { max-width:880px; margin:0 auto; padding:1.5rem 1rem 4rem; }
+  .app { max-width:960px; margin:0 auto; padding:1.5rem 1rem 4rem; }
   .app-header { display:flex; align-items:center; gap:12px; margin-bottom:1.5rem; flex-wrap:wrap; }
   .app-title { font-size:20px; font-weight:500; }
   .app-sub { font-size:13px; color:var(--text2); flex:1; }
@@ -34,10 +34,10 @@
   .sync-dot.ok { background:#639922; }
   .sync-dot.err { background:#e24b4a; }
   .sync-dot.loading { background:#ef9f27; animation:pulse 1s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
   .setup-banner { background:var(--info-bg); border:0.5px solid rgba(24,95,165,0.25); border-radius:var(--rad-lg); padding:1rem 1.25rem; margin-bottom:1.5rem; }
   .setup-banner h3 { font-size:14px; font-weight:500; color:var(--info-text); margin-bottom:8px; }
-  .setup-steps { font-size:13px; color:var(--info-text); line-height:1.8; }
+  .setup-steps { font-size:13px; color:var(--info-text); line-height:1.9; }
   .setup-steps code { background:rgba(24,95,165,0.12); padding:1px 6px; border-radius:4px; font-family:monospace; font-size:12px; }
   .url-row { display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap; }
   .url-input { flex:1; min-width:200px; font-size:13px; padding:7px 10px; border:0.5px solid rgba(24,95,165,0.4); border-radius:var(--rad); background:var(--bg); color:var(--text); font-family:var(--font); }
@@ -72,8 +72,9 @@
   .result-label { color:var(--text2); }
   .note { font-size:12px; color:var(--text2); margin-top:8px; }
   .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th { text-align:left; padding:8px 10px; font-weight:500; color:var(--text2); border-bottom:0.5px solid var(--border); font-size:12px; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+  th { text-align:left; padding:8px 10px; font-weight:500; color:var(--text2); border-bottom:0.5px solid var(--border); font-size:12px; white-space:nowrap; }
   td { padding:9px 10px; border-bottom:0.5px solid var(--border); color:var(--text); vertical-align:middle; }
   tr:last-child td { border-bottom:none; }
   tr:hover td { background:var(--bg2); }
@@ -82,6 +83,8 @@
   .badge-quoted { background:var(--warn-bg); color:var(--warn-text); }
   .badge-active { background:var(--success-bg); color:var(--success-text); }
   .badge-done { background:var(--bg3); color:var(--text2); }
+  .followup-soon { color:#854f0b; font-weight:500; }
+  .followup-overdue { color:#a32d2d; font-weight:500; }
   .status-dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; }
   .dot-pending { background:#888780; }
   .dot-sent { background:#639922; }
@@ -89,7 +92,7 @@
   .editable { border:0.5px solid var(--border2); border-radius:var(--rad); padding:4px 7px; width:75px; font-size:13px; background:var(--bg); color:var(--text); font-family:var(--font); }
   .modal-wrap { display:none; padding:1.5rem 0; }
   .modal-wrap.open { display:block; }
-  .modal { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--rad-lg); padding:1.25rem; max-width:480px; }
+  .modal { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--rad-lg); padding:1.25rem; max-width:520px; }
   .modal-title { font-size:15px; font-weight:500; margin-bottom:1rem; }
   .empty { font-size:13px; color:var(--text2); text-align:center; padding:2rem 0; }
   .price-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:13px; }
@@ -103,11 +106,7 @@
   .toast { position:fixed; bottom:1.5rem; right:1.5rem; background:var(--text); color:var(--bg); padding:10px 18px; border-radius:var(--rad); font-size:13px; font-weight:500; opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:100; }
   .toast.show { opacity:1; }
   .spinner { display:inline-block; width:12px; height:12px; border:2px solid var(--border2); border-top-color:var(--text2); border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:4px; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  @media (max-width:500px) {
-    .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    th:nth-child(3),td:nth-child(3) { display:none; }
-  }
+  @keyframes spin { to{transform:rotate(360deg)} }
 </style>
 </head>
 <body>
@@ -116,25 +115,24 @@
   <div class="app-header">
     <div class="app-title">Archon Coatings</div>
     <div class="app-sub">Business hub</div>
-    <div class="sync-status" id="sync-status">
+    <div class="sync-status">
       <span class="sync-dot" id="sync-dot"></span>
       <span id="sync-label">Not connected</span>
     </div>
   </div>
 
-  <!-- SETUP BANNER -->
   <div class="setup-banner" id="setup-banner">
-    <h3>Connect to Google Sheets — one-time setup</h3>
+    <h3 id="setup-title">Connect to Google Sheets — one-time setup</h3>
     <div class="setup-steps">
-      <b>Step 1:</b> Open your Google Sheet and click <code>Extensions → Apps Script</code><br>
-      <b>Step 2:</b> Delete any existing code, paste in the <code>archon_script.gs</code> file contents, and click Save<br>
-      <b>Step 3:</b> Click <code>Deploy → New deployment</code> → type: <b>Web app</b> → Execute as: <b>Me</b> → Who has access: <b>Anyone</b> → click <b>Deploy</b><br>
-      <b>Step 4:</b> Copy the Web App URL and paste it below, then click Connect
+      <b>Step 1:</b> Open your Google Sheet → <code>Extensions → Apps Script</code><br>
+      <b>Step 2:</b> Paste in the <code>archon_script_v3.gs</code> contents and save<br>
+      <b>Step 3:</b> <code>Deploy → New deployment</code> → Web app → Execute as: <b>Me</b> → Who has access: <b>Anyone</b> → Deploy<br>
+      <b>Step 4:</b> Copy the <code>/exec</code> URL and paste below
     </div>
     <div class="url-row">
-      <input class="url-input" id="script-url" type="url" placeholder="https://script.google.com/macros/s/...">
+      <input class="url-input" id="script-url" type="url" placeholder="https://script.google.com/macros/s/.../exec">
       <button class="btn btn-primary btn-sm" onclick="connectSheet()">Connect</button>
-      <button class="btn btn-sm" onclick="dismissSetup()" id="dismiss-btn" style="display:none;">Dismiss</button>
+      <button class="btn btn-sm" id="dismiss-btn" style="display:none;" onclick="dismissSetup()">Dismiss</button>
     </div>
   </div>
 
@@ -144,7 +142,7 @@
     <button class="tab" onclick="switchTab('outreach')">GC outreach</button>
   </div>
 
-  <!-- ── ESTIMATOR ── -->
+  <!-- ESTIMATOR -->
   <div id="panel-estimator" class="panel active">
     <div class="card">
       <div class="section-header">
@@ -222,7 +220,7 @@
     </div>
   </div>
 
-  <!-- ── TRACKER ── -->
+  <!-- TRACKER -->
   <div id="panel-tracker" class="panel">
     <div class="metric-grid">
       <div class="metric"><div class="metric-label">Leads & quoted</div><div class="metric-val" id="m-leads">—</div></div>
@@ -234,7 +232,9 @@
         <span class="card-title" style="margin-bottom:0;">All jobs & leads</span>
         <button class="btn btn-sm btn-primary" onclick="openJobModal()">+ Add job</button>
       </div>
-      <div id="job-table"><p class="empty"><span class="spinner"></span> Loading...</p></div>
+      <div class="table-wrap">
+        <div id="job-table"><p class="empty"><span class="spinner"></span> Loading...</p></div>
+      </div>
       <div class="modal-wrap" id="job-modal">
         <div class="modal">
           <div class="modal-title" id="job-modal-title">Add job / lead</div>
@@ -245,6 +245,10 @@
           <div class="row">
             <div class="field"><label>Coating type</label><input type="text" id="jm-type" placeholder="e.g. Metallic epoxy"></div>
             <div class="field"><label>Estimated value ($)</label><input type="number" id="jm-value"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Date submitted</label><input type="date" id="jm-submitted"></div>
+            <div class="field"><label>Follow-up date</label><input type="date" id="jm-followup"></div>
           </div>
           <div class="field" style="margin-bottom:10px;"><label>Status</label>
             <select id="jm-status">
@@ -265,7 +269,7 @@
     </div>
   </div>
 
-  <!-- ── OUTREACH ── -->
+  <!-- OUTREACH -->
   <div id="panel-outreach" class="panel">
     <div class="metric-grid">
       <div class="metric"><div class="metric-label"><span class="status-dot dot-pending"></span>Pending</div><div class="metric-val" id="cnt-pending">—</div></div>
@@ -320,66 +324,64 @@ const TYPE_NAMES = { solid:'Standard solid epoxy', flake:'Flake / chip', metalli
 
 let scriptUrl = localStorage.getItem(LS.url) || '';
 let rates = JSON.parse(localStorage.getItem(LS.rates) || 'null') || {...DEF_RATES};
-let jobs = [];
-let gcs  = [];
-let editJobId  = null;
-let editGCId   = null;
-let lastEst    = null;
+let jobs = [], gcs = [];
+let editJobId = null, editGCId = null, lastEst = null;
 
-function toast(msg, dur=2000){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), dur); }
+function toast(msg, dur=2000){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),dur); }
 function fmt(n){ return '$'+Math.round(n).toLocaleString(); }
-function setSyncStatus(state, label){
-  const dot=document.getElementById('sync-dot');
-  const lbl=document.getElementById('sync-label');
-  dot.className='sync-dot'+(state?' '+state:'');
-  lbl.textContent=label;
+function setSyncStatus(state, label){ document.getElementById('sync-dot').className='sync-dot'+(state?' '+state:''); document.getElementById('sync-label').textContent=label; }
+
+function fmtDate(val){
+  if(!val) return '—';
+  const s = String(val);
+  if(s.includes('T') || s.includes('-')){ const d=new Date(s); if(!isNaN(d)) return (d.getMonth()+1)+'/'+(d.getDate())+'/'+d.getFullYear(); }
+  return s;
 }
 
-async function api(params){
+function followupClass(val){
+  if(!val) return '';
+  const d = new Date(val);
+  if(isNaN(d)) return '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.floor((d - today) / 86400000);
+  if(diff < 0) return 'followup-overdue';
+  if(diff <= 3) return 'followup-soon';
+  return '';
+}
+
+async function api(params) {
   if(!scriptUrl) throw new Error('Not connected');
   const url = scriptUrl + '?' + new URLSearchParams(params);
-  const res = await fetch(url);
-  const data = await res.json();
-  if(data.error) throw new Error(data.error);
+  const res = await fetch(url, {redirect:'follow'});
+  const text = await res.text();
+  const data = JSON.parse(text);
+  if(data && data.error) throw new Error(data.error);
   return data;
 }
 
-async function apiPost(body){
-  if(!scriptUrl) throw new Error('Not connected');
-  const res = await fetch(scriptUrl, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(body),
-    redirect:'follow'
-  });
-  const data = await res.json();
-  if(data.error) throw new Error(data.error);
-  return data;
-}
-
-async function connectSheet(){
+async function connectSheet() {
   const input = document.getElementById('script-url').value.trim();
-  if(!input || !input.startsWith('https://script.google.com')) {
-    toast('Please paste a valid Apps Script URL'); return;
-  }
+  if(!input || !input.includes('script.google.com')) { toast('Please paste a valid Apps Script URL'); return; }
   scriptUrl = input;
   setSyncStatus('loading','Connecting...');
   try {
-    await loadAll();
+    await api({action:'getRates'});
     localStorage.setItem(LS.url, scriptUrl);
-    setSyncStatus('ok','Connected to Google Sheets');
+    setSyncStatus('ok','Connected');
     toast('Connected!');
-    document.getElementById('dismiss-btn').style.display='inline-block';
-    document.getElementById('setup-banner').querySelector('h3').textContent='Connected to Google Sheets';
-  } catch(e){
+    document.getElementById('setup-title').textContent = 'Connected to Google Sheets';
+    document.getElementById('dismiss-btn').style.display = 'inline-block';
+    await loadAll();
+  } catch(e) {
     setSyncStatus('err','Connection failed');
-    toast('Could not connect — check the URL and try again', 3000);
+    toast('Could not connect — check the URL', 3000);
+    scriptUrl = '';
   }
 }
 
 function dismissSetup(){ document.getElementById('setup-banner').style.display='none'; }
 
-async function loadAll(){
+async function loadAll() {
   setSyncStatus('loading','Syncing...');
   try {
     const [jobData, gcData, rateData] = await Promise.all([
@@ -387,42 +389,40 @@ async function loadAll(){
       api({action:'getAll', sheet:'GC Contacts'}),
       api({action:'getRates'})
     ]);
-    jobs = jobData || [];
-    gcs  = gcData  || [];
-    if(rateData) { rates={...DEF_RATES,...rateData}; localStorage.setItem(LS.rates, JSON.stringify(rates)); }
+    jobs = Array.isArray(jobData) ? jobData : [];
+    gcs  = Array.isArray(gcData)  ? gcData  : [];
+    if(rateData && typeof rateData === 'object') {
+      rates = {...DEF_RATES, ...rateData};
+      localStorage.setItem(LS.rates, JSON.stringify(rates));
+    }
     renderJobs(); renderGCs(); renderRates();
     setSyncStatus('ok','Synced');
-  } catch(e){
+  } catch(e) {
     setSyncStatus('err','Sync error');
     renderJobs(); renderGCs();
   }
 }
 
 function switchTab(name){
-  document.querySelectorAll('.tab').forEach((t,i)=>{ t.classList.toggle('active',['estimator','tracker','outreach'][i]===name); });
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['estimator','tracker','outreach'][i]===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
 }
 
 function renderRates(){
-  ['solid','flake','metallic','poly','esd'].forEach(k=>{
-    const el=document.getElementById('dv-'+k);
-    if(el) el.textContent='$'+rates[k].toFixed(2)+'/sqft';
-  });
+  ['solid','flake','metallic','poly','esd'].forEach(k=>{ const el=document.getElementById('dv-'+k); if(el) el.textContent='$'+rates[k].toFixed(2)+'/sqft'; });
 }
 function toggleRates(){
   const v=document.getElementById('rates-view'), e=document.getElementById('rates-edit'), btn=document.getElementById('rate-btn');
-  if(e.style.display==='none'){
-    ['solid','flake','metallic','poly','esd'].forEach(k=>document.getElementById('er-'+k).value=rates[k]);
-    v.style.display='none'; e.style.display='block'; btn.textContent='Cancel';
-  } else cancelRates();
+  if(e.style.display==='none'){ ['solid','flake','metallic','poly','esd'].forEach(k=>document.getElementById('er-'+k).value=rates[k]); v.style.display='none'; e.style.display='block'; btn.textContent='Cancel'; }
+  else cancelRates();
 }
 function cancelRates(){ document.getElementById('rates-view').style.display='block'; document.getElementById('rates-edit').style.display='none'; document.getElementById('rate-btn').textContent='Edit rates'; }
 async function saveRates(){
   ['solid','flake','metallic','poly','esd'].forEach(k=>{ const v=parseFloat(document.getElementById('er-'+k).value); if(!isNaN(v)&&v>0) rates[k]=v; });
   localStorage.setItem(LS.rates, JSON.stringify(rates));
   renderRates(); cancelRates();
-  if(scriptUrl){ try{ await apiPost({action:'saveRates', rates}); toast('Rates saved'); }catch(e){ toast('Saved locally'); } }
+  if(scriptUrl){ try{ await api({action:'saveRates', ...rates}); toast('Rates saved'); }catch(e){ toast('Saved locally only'); } }
   else toast('Rates saved locally');
 }
 
@@ -432,8 +432,7 @@ function calcEst(){
   const type=document.getElementById('est-type').value;
   const condMult=parseFloat(document.getElementById('est-cond').value);
   const addon=parseFloat(document.getElementById('est-addon').value)||0;
-  const rate=rates[type];
-  const base=sqft*rate, condAdj=base*(condMult-1), sub=base+condAdj+addon;
+  const rate=rates[type], base=sqft*rate, condAdj=base*(condMult-1), sub=base+condAdj+addon;
   const condLabels={'1':'good','1.15':'fair','1.30':'poor'};
   document.getElementById('r-base').textContent=fmt(base);
   document.getElementById('r-cond-adj').textContent=condMult>1?('+'+fmt(condAdj)):'$0';
@@ -442,29 +441,42 @@ function calcEst(){
   document.getElementById('r-total').textContent=fmt(sub);
   document.getElementById('r-note').textContent='$'+rate.toFixed(2)+'/sqft · '+Math.round(sqft).toLocaleString()+' sqft · '+(condLabels[String(condMult)]||'')+' concrete';
   document.getElementById('est-result').style.display='block';
-  lastEst={ client:document.getElementById('est-client').value||'Unnamed client', location:document.getElementById('est-location').value||'—', type:TYPE_NAMES[type]||type, value:Math.round(sub), status:'quoted', notes:'' };
+  lastEst={ client:document.getElementById('est-client').value||'Unnamed client', location:document.getElementById('est-location').value||'—', type:TYPE_NAMES[type]||type, value:Math.round(sub), status:'quoted', submitted:'', followup:'', notes:'' };
 }
 
 async function sendToTracker(){
   if(!lastEst) return;
   try {
     setSyncStatus('loading','Saving...');
-    const res = await apiPost({action:'save', sheet:'Jobs', data:{...lastEst}});
+    const res = await api({action:'save', sheet:'Jobs', ...lastEst});
     lastEst.id = res.id;
     jobs.push({...lastEst});
     renderJobs(); switchTab('tracker');
     setSyncStatus('ok','Synced'); toast('Added to job tracker');
-  } catch(e){ toast('Not connected — connect sheet to save'); }
+  } catch(e){ toast('Save failed: '+e.message, 3000); setSyncStatus('err','Save failed'); }
 }
 
 function renderJobs(){
   const el=document.getElementById('job-table');
-  if(jobs.length===0){ el.innerHTML='<p class="empty">No jobs yet. Add one above or use the estimator.</p>'; }
+  if(!jobs.length){ el.innerHTML='<p class="empty">No jobs yet. Add one or use the estimator.</p>'; }
   else {
     const bm={lead:'badge-lead',quoted:'badge-quoted',active:'badge-active',done:'badge-done'};
     const lm={lead:'Lead',quoted:'Quoted',active:'Active',done:'Completed'};
-    el.innerHTML='<table><thead><tr><th>Client</th><th>Location</th><th>Type</th><th>Value</th><th>Status</th><th></th></tr></thead><tbody>'+
-      jobs.map(j=>`<tr><td style="font-weight:500;">${j.client}</td><td style="color:var(--text2);">${j.location}</td><td style="color:var(--text2);">${j.type}</td><td>${j.value?fmt(j.value):'—'}</td><td><span class="badge ${bm[j.status]||'badge-lead'}">${lm[j.status]||j.status}</span></td><td><button class="btn btn-sm" onclick="openJobModal('${j.id}')" style="padding:3px 8px;font-size:11px;">Edit</button></td></tr>`).join('')+'</tbody></table>';
+    el.innerHTML='<table><thead><tr><th>Client</th><th>Location</th><th>Type</th><th>Value</th><th>Status</th><th>Submitted</th><th>Follow-up</th><th></th></tr></thead><tbody>'+
+      jobs.map(j=>{
+        const fc=followupClass(j.followup);
+        const fuDisplay=j.followup?`<span class="${fc}">${fmtDate(j.followup)}</span>`:'—';
+        return `<tr>
+          <td style="font-weight:500;">${j.client}</td>
+          <td style="color:var(--text2);">${j.location}</td>
+          <td style="color:var(--text2);">${j.type}</td>
+          <td>${j.value?fmt(j.value):'—'}</td>
+          <td><span class="badge ${bm[j.status]||'badge-lead'}">${lm[j.status]||j.status}</span></td>
+          <td style="color:var(--text2);">${fmtDate(j.submitted)}</td>
+          <td>${fuDisplay}</td>
+          <td><button class="btn btn-sm" onclick="openJobModal('${j.id}')" style="padding:3px 8px;font-size:11px;">Edit</button></td>
+        </tr>`;
+      }).join('')+'</tbody></table>';
   }
   document.getElementById('m-leads').textContent=jobs.filter(j=>j.status==='lead'||j.status==='quoted').length;
   document.getElementById('m-active').textContent=jobs.filter(j=>j.status==='active').length;
@@ -472,36 +484,58 @@ function renderJobs(){
 }
 
 function openJobModal(id){
-  editJobId = id || null;
-  document.getElementById('job-modal-title').textContent = editJobId ? 'Edit job' : 'Add job / lead';
-  document.getElementById('jm-delete-btn').style.display = editJobId ? 'inline-block' : 'none';
-  if(editJobId){ const j=jobs.find(x=>String(x.id)===String(editJobId))||{}; document.getElementById('jm-client').value=j.client||''; document.getElementById('jm-location').value=j.location||''; document.getElementById('jm-type').value=j.type||''; document.getElementById('jm-value').value=j.value||''; document.getElementById('jm-status').value=j.status||'lead'; document.getElementById('jm-notes').value=j.notes||''; }
-  else { ['jm-client','jm-location','jm-type','jm-value','jm-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('jm-status').value='lead'; }
+  editJobId=id||null;
+  document.getElementById('job-modal-title').textContent=editJobId?'Edit job':'Add job / lead';
+  document.getElementById('jm-delete-btn').style.display=editJobId?'inline-block':'none';
+  if(editJobId){
+    const j=jobs.find(x=>String(x.id)===String(editJobId))||{};
+    document.getElementById('jm-client').value=j.client||'';
+    document.getElementById('jm-location').value=j.location||'';
+    document.getElementById('jm-type').value=j.type||'';
+    document.getElementById('jm-value').value=j.value||'';
+    document.getElementById('jm-status').value=j.status||'lead';
+    document.getElementById('jm-submitted').value=j.submitted||'';
+    document.getElementById('jm-followup').value=j.followup||'';
+    document.getElementById('jm-notes').value=j.notes||'';
+  } else {
+    ['jm-client','jm-location','jm-type','jm-value','jm-notes','jm-submitted','jm-followup'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('jm-status').value='lead';
+  }
   document.getElementById('job-modal').classList.add('open');
 }
 function closeJobModal(){ document.getElementById('job-modal').classList.remove('open'); editJobId=null; }
 async function saveJob(){
   const client=document.getElementById('jm-client').value.trim(); if(!client) return;
-  const data={ id:editJobId||undefined, client, location:document.getElementById('jm-location').value||'—', type:document.getElementById('jm-type').value||'—', value:parseFloat(document.getElementById('jm-value').value)||0, status:document.getElementById('jm-status').value, notes:document.getElementById('jm-notes').value||'' };
+  const data={
+    client,
+    location:document.getElementById('jm-location').value||'—',
+    type:document.getElementById('jm-type').value||'—',
+    value:parseFloat(document.getElementById('jm-value').value)||0,
+    status:document.getElementById('jm-status').value,
+    submitted:document.getElementById('jm-submitted').value||'',
+    followup:document.getElementById('jm-followup').value||'',
+    notes:document.getElementById('jm-notes').value||''
+  };
+  if(editJobId) data.id=editJobId;
   const btn=document.getElementById('jm-save-btn'); btn.disabled=true; btn.textContent='Saving...';
   try {
-    const res = await apiPost({action:'save', sheet:'Jobs', data});
+    const res=await api({action:'save', sheet:'Jobs', ...data});
     if(!editJobId){ data.id=res.id; jobs.push(data); } else { const i=jobs.findIndex(x=>String(x.id)===String(editJobId)); if(i>-1) jobs[i]=data; }
     renderJobs(); closeJobModal(); setSyncStatus('ok','Synced'); toast('Saved');
-  } catch(e){ toast('Not connected — connect sheet to save'); }
+  } catch(e){ toast('Save failed: '+e.message, 3000); setSyncStatus('err','Save failed'); }
   btn.disabled=false; btn.textContent='Save';
 }
 async function deleteJob(){
   if(!editJobId) return;
-  try { await apiPost({action:'delete', sheet:'Jobs', id:editJobId}); jobs=jobs.filter(j=>String(j.id)!==String(editJobId)); renderJobs(); closeJobModal(); toast('Deleted'); setSyncStatus('ok','Synced'); }
-  catch(e){ toast('Delete failed'); }
+  try { await api({action:'delete', sheet:'Jobs', id:editJobId}); jobs=jobs.filter(j=>String(j.id)!==String(editJobId)); renderJobs(); closeJobModal(); toast('Deleted'); setSyncStatus('ok','Synced'); }
+  catch(e){ toast('Delete failed: '+e.message, 3000); }
 }
 
 function renderGCs(){
   const el=document.getElementById('gc-list');
   const dm={pending:'dot-pending',sent:'dot-sent',replied:'dot-replied'};
   const lm={pending:'Pending',sent:'Sent',replied:'Replied'};
-  if(gcs.length===0){ el.innerHTML='<p class="empty">No contacts yet — add your first GC above.</p>'; }
+  if(!gcs.length){ el.innerHTML='<p class="empty">No contacts yet.</p>'; }
   else { el.innerHTML=gcs.map(g=>`<div class="gc-item"><div><div class="gc-name">${g.company}</div><div class="gc-sub">${g.contact||''}${g.email?' · '+g.email:''}</div></div><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:12px;color:var(--text2);white-space:nowrap;"><span class="status-dot ${dm[g.status]}"></span>${lm[g.status]||g.status}</span><button class="btn btn-sm" onclick="openGCModal('${g.id}')" style="padding:3px 8px;font-size:11px;">Edit</button></div></div>`).join(''); }
   document.getElementById('cnt-pending').textContent=gcs.filter(g=>g.status==='pending').length;
   document.getElementById('cnt-sent').textContent=gcs.filter(g=>g.status==='sent').length;
@@ -509,9 +543,9 @@ function renderGCs(){
 }
 
 function openGCModal(id){
-  editGCId = id || null;
-  document.getElementById('gc-modal-title').textContent = editGCId ? 'Edit contact' : 'Add GC contact';
-  document.getElementById('gcm-delete-btn').style.display = editGCId ? 'inline-block' : 'none';
+  editGCId=id||null;
+  document.getElementById('gc-modal-title').textContent=editGCId?'Edit contact':'Add GC contact';
+  document.getElementById('gcm-delete-btn').style.display=editGCId?'inline-block':'none';
   if(editGCId){ const g=gcs.find(x=>String(x.id)===String(editGCId))||{}; document.getElementById('gcm-company').value=g.company||''; document.getElementById('gcm-contact').value=g.contact||''; document.getElementById('gcm-email').value=g.email||''; document.getElementById('gcm-phone').value=g.phone||''; document.getElementById('gcm-status').value=g.status||'pending'; document.getElementById('gcm-notes').value=g.notes||''; }
   else { ['gcm-company','gcm-contact','gcm-email','gcm-phone','gcm-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('gcm-status').value='pending'; }
   document.getElementById('gc-modal').classList.add('open');
@@ -519,23 +553,24 @@ function openGCModal(id){
 function closeGCModal(){ document.getElementById('gc-modal').classList.remove('open'); editGCId=null; }
 async function saveGC(){
   const company=document.getElementById('gcm-company').value.trim(); if(!company) return;
-  const data={ id:editGCId||undefined, company, contact:document.getElementById('gcm-contact').value||'', email:document.getElementById('gcm-email').value||'', phone:document.getElementById('gcm-phone').value||'', status:document.getElementById('gcm-status').value, notes:document.getElementById('gcm-notes').value||'' };
+  const data={ company, contact:document.getElementById('gcm-contact').value||'', email:document.getElementById('gcm-email').value||'', phone:document.getElementById('gcm-phone').value||'', status:document.getElementById('gcm-status').value, notes:document.getElementById('gcm-notes').value||'' };
+  if(editGCId) data.id=editGCId;
   const btn=document.getElementById('gcm-save-btn'); btn.disabled=true; btn.textContent='Saving...';
   try {
-    const res = await apiPost({action:'save', sheet:'GC Contacts', data});
+    const res=await api({action:'save', sheet:'GC Contacts', ...data});
     if(!editGCId){ data.id=res.id; gcs.push(data); } else { const i=gcs.findIndex(x=>String(x.id)===String(editGCId)); if(i>-1) gcs[i]=data; }
     renderGCs(); closeGCModal(); setSyncStatus('ok','Synced'); toast('Saved');
-  } catch(e){ toast('Not connected — connect sheet to save'); }
+  } catch(e){ toast('Save failed: '+e.message, 3000); setSyncStatus('err','Save failed'); }
   btn.disabled=false; btn.textContent='Save';
 }
 async function deleteGC(){
   if(!editGCId) return;
-  try { await apiPost({action:'delete', sheet:'GC Contacts', id:editGCId}); gcs=gcs.filter(g=>String(g.id)!==String(editGCId)); renderGCs(); closeGCModal(); toast('Deleted'); setSyncStatus('ok','Synced'); }
-  catch(e){ toast('Delete failed'); }
+  try { await api({action:'delete', sheet:'GC Contacts', id:editGCId}); gcs=gcs.filter(g=>String(g.id)!==String(editGCId)); renderGCs(); closeGCModal(); toast('Deleted'); setSyncStatus('ok','Synced'); }
+  catch(e){ toast('Delete failed: '+e.message, 3000); }
 }
 async function markAllSent(){
   const pending=gcs.filter(g=>g.status==='pending');
-  for(const g of pending){ g.status='sent'; try{ await apiPost({action:'save', sheet:'GC Contacts', data:g}); }catch(e){} }
+  for(const g of pending){ g.status='sent'; try{ await api({action:'save', sheet:'GC Contacts', ...g}); }catch(e){} }
   renderGCs(); toast('Marked '+pending.length+' as sent');
 }
 
@@ -543,6 +578,7 @@ renderRates();
 if(scriptUrl){
   document.getElementById('script-url').value=scriptUrl;
   document.getElementById('dismiss-btn').style.display='inline-block';
+  document.getElementById('setup-title').textContent='Connected to Google Sheets';
   loadAll();
 } else {
   document.getElementById('job-table').innerHTML='<p class="empty">Connect to Google Sheets above to load data.</p>';
