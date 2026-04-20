@@ -239,11 +239,18 @@
         <div class="modal">
           <div class="modal-title" id="job-modal-title">Add job / lead</div>
           <div class="row">
-            <div class="field"><label>Client name</label><input type="text" id="jm-client"></div>
-            <div class="field"><label>Location</label><input type="text" id="jm-location"></div>
+            <div class="field"><label>Job name</label><input type="text" id="jm-jobname" placeholder="e.g. Garage floor coating"></div>
+            <div class="field"><label>GC name</label><input type="text" id="jm-gcname" placeholder="e.g. ABC Construction"></div>
           </div>
           <div class="row">
+            <div class="field"><label>Client name</label><input type="text" id="jm-client"></div>
+            <div class="field"><label>Client contact</label><input type="text" id="jm-clientcontact" placeholder="e.g. John Smith"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Location</label><input type="text" id="jm-location"></div>
             <div class="field"><label>Coating type</label><input type="text" id="jm-type" placeholder="e.g. Metallic epoxy"></div>
+          </div>
+          <div class="row">
             <div class="field"><label>Estimated value ($)</label><input type="number" id="jm-value"></div>
           </div>
           <div class="row">
@@ -441,7 +448,7 @@ function calcEst(){
   document.getElementById('r-total').textContent=fmt(sub);
   document.getElementById('r-note').textContent='$'+rate.toFixed(2)+'/sqft · '+Math.round(sqft).toLocaleString()+' sqft · '+(condLabels[String(condMult)]||'')+' concrete';
   document.getElementById('est-result').style.display='block';
-  lastEst={ client:document.getElementById('est-client').value||'Unnamed client', location:document.getElementById('est-location').value||'—', type:TYPE_NAMES[type]||type, value:Math.round(sub), status:'quoted', submitted:'', followup:'', notes:'' };
+  lastEst={ client:document.getElementById('est-client').value||'Unnamed client', clientcontact:'', jobname:'', gcname:'', location:document.getElementById('est-location').value||'—', type:TYPE_NAMES[type]||type, value:Math.round(sub), status:'quoted', submitted:'', followup:'', notes:'' };
 }
 
 async function sendToTracker(){
@@ -462,12 +469,15 @@ function renderJobs(){
   else {
     const bm={lead:'badge-lead',quoted:'badge-quoted',active:'badge-active',done:'badge-done'};
     const lm={lead:'Lead',quoted:'Quoted',active:'Active',done:'Completed'};
-    el.innerHTML='<table><thead><tr><th>Client</th><th>Location</th><th>Type</th><th>Value</th><th>Status</th><th>Submitted</th><th>Follow-up</th><th></th></tr></thead><tbody>'+
+    el.innerHTML='<table><thead><tr><th>Job name</th><th>GC</th><th>Client</th><th>Contact</th><th>Location</th><th>Type</th><th>Value</th><th>Status</th><th>Submitted</th><th>Follow-up</th><th></th></tr></thead><tbody>'+
       jobs.map(j=>{
         const fc=followupClass(j.followup);
         const fuDisplay=j.followup?`<span class="${fc}">${fmtDate(j.followup)}</span>`:'—';
         return `<tr>
-          <td style="font-weight:500;">${j.client}</td>
+          <td style="font-weight:500;">${j.jobname||'—'}</td>
+          <td style="color:var(--text2);">${j.gcname||'—'}</td>
+          <td style="color:var(--text2);">${j.client}</td>
+          <td style="color:var(--text2);">${j.clientcontact||'—'}</td>
           <td style="color:var(--text2);">${j.location}</td>
           <td style="color:var(--text2);">${j.type}</td>
           <td>${j.value?fmt(j.value):'—'}</td>
@@ -490,6 +500,9 @@ function openJobModal(id){
   if(editJobId){
     const j=jobs.find(x=>String(x.id)===String(editJobId))||{};
     document.getElementById('jm-client').value=j.client||'';
+    document.getElementById('jm-clientcontact').value=j.clientcontact||'';
+    document.getElementById('jm-jobname').value=j.jobname||'';
+    document.getElementById('jm-gcname').value=j.gcname||'';
     document.getElementById('jm-location').value=j.location||'';
     document.getElementById('jm-type').value=j.type||'';
     document.getElementById('jm-value').value=j.value||'';
@@ -498,7 +511,7 @@ function openJobModal(id){
     document.getElementById('jm-followup').value=j.followup||'';
     document.getElementById('jm-notes').value=j.notes||'';
   } else {
-    ['jm-client','jm-location','jm-type','jm-value','jm-notes','jm-submitted','jm-followup'].forEach(id=>document.getElementById(id).value='');
+    ['jm-client','jm-clientcontact','jm-jobname','jm-gcname','jm-location','jm-type','jm-value','jm-notes','jm-submitted','jm-followup'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('jm-status').value='lead';
   }
   document.getElementById('job-modal').classList.add('open');
@@ -508,6 +521,9 @@ async function saveJob(){
   const client=document.getElementById('jm-client').value.trim(); if(!client) return;
   const data={
     client,
+    clientcontact:document.getElementById('jm-clientcontact').value||'',
+    jobname:document.getElementById('jm-jobname').value||'',
+    gcname:document.getElementById('jm-gcname').value||'',
     location:document.getElementById('jm-location').value||'—',
     type:document.getElementById('jm-type').value||'—',
     value:parseFloat(document.getElementById('jm-value').value)||0,
