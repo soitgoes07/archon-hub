@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archon Coatings — Business Hub</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#ffffff; --bg2:#f5f5f3; --bg3:#eeede8;
+    --text:#1a1a1a; --text2:#666662; --text3:#999994;
+    --border:rgba(0,0,0,0.12); --border2:rgba(0,0,0,0.22);
+    --success-bg:#eaf3de; --success-text:#27500a;
+    --info-bg:#e6f1fb; --info-text:#0c447c;
+    --warn-bg:#faeeda; --warn-text:#633806;
+    --danger-bg:#fcebeb; --danger-text:#a32d2d;
+    --rad:8px; --rad-lg:12px;
+    --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  @media (prefers-color-scheme:dark) {
+    :root {
+      --bg:#1e1e1e; --bg2:#2a2a2a; --bg3:#333333;
+      --text:#e8e8e6; --text2:#a0a09a; --text3:#666660;
+      --border:rgba(255,255,255,0.12); --border2:rgba(255,255,255,0.22);
+    }
+  }
+  body { font-family:var(--font); background:var(--bg3); color:var(--text); font-size:15px; min-height:100vh; }
+  .app { max-width:880px; margin:0 auto; padding:1.5rem 1rem 4rem; }
+  .app-header { display:flex; align-items:center; gap:12px; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .app-title { font-size:20px; font-weight:500; }
+  .app-sub { font-size:13px; color:var(--text2); flex:1; }
+  .sync-status { font-size:12px; padding:4px 10px; border-radius:999px; border:0.5px solid var(--border2); color:var(--text2); display:flex; align-items:center; gap:6px; }
+  .sync-dot { width:7px; height:7px; border-radius:50%; background:#888; }
+  .sync-dot.ok { background:#639922; }
+  .sync-dot.err { background:#e24b4a; }
+  .sync-dot.loading { background:#ef9f27; animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .setup-banner { background:var(--info-bg); border:0.5px solid rgba(24,95,165,0.25); border-radius:var(--rad-lg); padding:1rem 1.25rem; margin-bottom:1.5rem; }
+  .setup-banner h3 { font-size:14px; font-weight:500; color:var(--info-text); margin-bottom:8px; }
+  .setup-steps { font-size:13px; color:var(--info-text); line-height:1.8; }
+  .setup-steps code { background:rgba(24,95,165,0.12); padding:1px 6px; border-radius:4px; font-family:monospace; font-size:12px; }
+  .url-row { display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap; }
+  .url-input { flex:1; min-width:200px; font-size:13px; padding:7px 10px; border:0.5px solid rgba(24,95,165,0.4); border-radius:var(--rad); background:var(--bg); color:var(--text); font-family:var(--font); }
+  .tabs { display:flex; gap:2px; margin-bottom:1.5rem; border-bottom:0.5px solid var(--border); }
+  .tab { padding:9px 18px; font-size:14px; font-weight:500; cursor:pointer; border:none; background:none; color:var(--text2); border-bottom:2px solid transparent; margin-bottom:-1px; font-family:var(--font); }
+  .tab.active { color:var(--text); border-bottom:2px solid var(--text); }
+  .tab:hover { color:var(--text); }
+  .panel { display:none; }
+  .panel.active { display:block; }
+  .card { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--rad-lg); padding:1rem 1.25rem; margin-bottom:14px; }
+  .card-title { font-size:15px; font-weight:500; margin-bottom:12px; }
+  .row { display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .field { display:flex; flex-direction:column; gap:5px; flex:1; min-width:140px; }
+  .field label { font-size:12px; color:var(--text2); font-weight:500; }
+  .field input,.field select { font-size:14px; padding:8px 10px; border:0.5px solid var(--border2); border-radius:var(--rad); background:var(--bg); color:var(--text); width:100%; font-family:var(--font); }
+  .field input:focus,.field select:focus { outline:none; border-color:var(--text); }
+  .btn { padding:8px 16px; font-size:14px; font-weight:500; border-radius:var(--rad); cursor:pointer; border:0.5px solid var(--border2); background:var(--bg); color:var(--text); font-family:var(--font); transition:background 0.1s; }
+  .btn:hover { background:var(--bg2); }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .btn-primary { background:var(--text); color:var(--bg); border-color:var(--text); }
+  .btn-primary:hover { opacity:0.85; }
+  .btn-sm { padding:5px 12px; font-size:12px; }
+  .btn-danger { border-color:#e24b4a; color:#a32d2d; }
+  .btn-danger:hover { background:var(--danger-bg); }
+  .metric-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:1.5rem; }
+  .metric { background:var(--bg2); border-radius:var(--rad); padding:14px; }
+  .metric-label { font-size:12px; color:var(--text2); margin-bottom:5px; }
+  .metric-val { font-size:24px; font-weight:500; }
+  .result-box { background:var(--bg2); border-radius:var(--rad); padding:1rem 1.25rem; margin-top:14px; }
+  .result-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:14px; border-bottom:0.5px solid var(--border); }
+  .result-row:last-child { border-bottom:none; font-weight:500; font-size:15px; }
+  .result-label { color:var(--text2); }
+  .note { font-size:12px; color:var(--text2); margin-top:8px; }
+  .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; padding:8px 10px; font-weight:500; color:var(--text2); border-bottom:0.5px solid var(--border); font-size:12px; }
+  td { padding:9px 10px; border-bottom:0.5px solid var(--border); color:var(--text); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--bg2); }
+  .badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:500; }
+  .badge-lead { background:var(--info-bg); color:var(--info-text); }
+  .badge-quoted { background:var(--warn-bg); color:var(--warn-text); }
+  .badge-active { background:var(--success-bg); color:var(--success-text); }
+  .badge-done { background:var(--bg3); color:var(--text2); }
+  .status-dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; }
+  .dot-pending { background:#888780; }
+  .dot-sent { background:#639922; }
+  .dot-replied { background:#185fa5; }
+  .editable { border:0.5px solid var(--border2); border-radius:var(--rad); padding:4px 7px; width:75px; font-size:13px; background:var(--bg); color:var(--text); font-family:var(--font); }
+  .modal-wrap { display:none; padding:1.5rem 0; }
+  .modal-wrap.open { display:block; }
+  .modal { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--rad-lg); padding:1.25rem; max-width:480px; }
+  .modal-title { font-size:15px; font-weight:500; margin-bottom:1rem; }
+  .empty { font-size:13px; color:var(--text2); text-align:center; padding:2rem 0; }
+  .price-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:0.5px solid var(--border); font-size:13px; }
+  .price-row:last-child { border-bottom:none; }
+  .price-name { font-weight:500; }
+  .price-sub { font-size:11px; color:var(--text3); }
+  .gc-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:0.5px solid var(--border); }
+  .gc-item:last-child { border-bottom:none; }
+  .gc-name { font-size:14px; font-weight:500; }
+  .gc-sub { font-size:12px; color:var(--text2); }
+  .toast { position:fixed; bottom:1.5rem; right:1.5rem; background:var(--text); color:var(--bg); padding:10px 18px; border-radius:var(--rad); font-size:13px; font-weight:500; opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:100; }
+  .toast.show { opacity:1; }
+  .spinner { display:inline-block; width:12px; height:12px; border:2px solid var(--border2); border-top-color:var(--text2); border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:4px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (max-width:500px) {
+    .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    th:nth-child(3),td:nth-child(3) { display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="app-header">
+    <div class="app-title">Archon Coatings</div>
+    <div class="app-sub">Business hub</div>
+    <div class="sync-status" id="sync-status">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-label">Not connected</span>
+    </div>
+  </div>
+
+  <!-- SETUP BANNER -->
+  <div class="setup-banner" id="setup-banner">
+    <h3>Connect to Google Sheets — one-time setup</h3>
+    <div class="setup-steps">
+      <b>Step 1:</b> Open your Google Sheet and click <code>Extensions → Apps Script</code><br>
+      <b>Step 2:</b> Delete any existing code, paste in the <code>archon_script.gs</code> file contents, and click Save<br>
+      <b>Step 3:</b> Click <code>Deploy → New deployment</code> → type: <b>Web app</b> → Execute as: <b>Me</b> → Who has access: <b>Anyone</b> → click <b>Deploy</b><br>
+      <b>Step 4:</b> Copy the Web App URL and paste it below, then click Connect
+    </div>
+    <div class="url-row">
+      <input class="url-input" id="script-url" type="url" placeholder="https://script.google.com/macros/s/...">
+      <button class="btn btn-primary btn-sm" onclick="connectSheet()">Connect</button>
+      <button class="btn btn-sm" onclick="dismissSetup()" id="dismiss-btn" style="display:none;">Dismiss</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('estimator')">Job estimator</button>
+    <button class="tab" onclick="switchTab('tracker')">Job tracker</button>
+    <button class="tab" onclick="switchTab('outreach')">GC outreach</button>
+  </div>
+
+  <!-- ── ESTIMATOR ── -->
+  <div id="panel-estimator" class="panel active">
+    <div class="card">
+      <div class="section-header">
+        <span class="card-title" style="margin-bottom:0;">Pricing rates</span>
+        <button class="btn btn-sm" onclick="toggleRates()" id="rate-btn">Edit rates</button>
+      </div>
+      <div id="rates-view">
+        <div class="price-row"><span><div class="price-name">Standard solid epoxy</div><div class="price-sub">1 color, no flake</div></span><span id="dv-solid" style="font-weight:500;"></span></div>
+        <div class="price-row"><span><div class="price-name">Flake / chip system</div><div class="price-sub">Full broadcast flake</div></span><span id="dv-flake" style="font-weight:500;"></span></div>
+        <div class="price-row"><span><div class="price-name">Metallic epoxy</div><div class="price-sub">Decorative, 2-layer</div></span><span id="dv-metallic" style="font-weight:500;"></span></div>
+        <div class="price-row"><span><div class="price-name">Polyaspartic / urethane</div><div class="price-sub">Topcoat or full system</div></span><span id="dv-poly" style="font-weight:500;"></span></div>
+        <div class="price-row"><span><div class="price-name">ESD / specialty</div><div class="price-sub">Conductive flooring</div></span><span id="dv-esd" style="font-weight:500;"></span></div>
+      </div>
+      <div id="rates-edit" style="display:none;margin-top:8px;">
+        <div class="price-row"><span class="price-name">Standard solid epoxy</span><span>$<input class="editable" id="er-solid" type="number" step="0.25">/sqft</span></div>
+        <div class="price-row"><span class="price-name">Flake / chip system</span><span>$<input class="editable" id="er-flake" type="number" step="0.25">/sqft</span></div>
+        <div class="price-row"><span class="price-name">Metallic epoxy</span><span>$<input class="editable" id="er-metallic" type="number" step="0.25">/sqft</span></div>
+        <div class="price-row"><span class="price-name">Polyaspartic / urethane</span><span>$<input class="editable" id="er-poly" type="number" step="0.25">/sqft</span></div>
+        <div class="price-row"><span class="price-name">ESD / specialty</span><span>$<input class="editable" id="er-esd" type="number" step="0.25">/sqft</span></div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn btn-primary btn-sm" onclick="saveRates()">Save rates</button>
+          <button class="btn btn-sm" onclick="cancelRates()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">New estimate</div>
+      <div class="row">
+        <div class="field"><label>Client name</label><input type="text" id="est-client" placeholder="e.g. John Smith"></div>
+        <div class="field"><label>Location</label><input type="text" id="est-location" placeholder="e.g. Murfreesboro, TN"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Square footage</label><input type="number" id="est-sqft" placeholder="e.g. 600" min="1"></div>
+        <div class="field"><label>Coating type</label>
+          <select id="est-type">
+            <option value="solid">Standard solid epoxy</option>
+            <option value="flake">Flake / chip system</option>
+            <option value="metallic">Metallic epoxy</option>
+            <option value="poly">Polyaspartic / urethane</option>
+            <option value="esd">ESD / specialty</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Concrete condition</label>
+          <select id="est-cond">
+            <option value="1">Good — minimal prep</option>
+            <option value="1.15">Fair — some cracks / stains</option>
+            <option value="1.30">Poor — heavy grinding needed</option>
+          </select>
+        </div>
+        <div class="field"><label>Add-ons</label>
+          <select id="est-addon">
+            <option value="0">None</option>
+            <option value="150">Cove base (+$150)</option>
+            <option value="300">Cove base + wall flashing (+$300)</option>
+            <option value="200">Metal stud prep (+$200)</option>
+            <option value="400">Metal stud prep + cove (+$400)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calcEst()" style="width:100%;margin-top:4px;">Calculate estimate</button>
+      <div id="est-result" style="display:none;" class="result-box">
+        <div class="result-row"><span class="result-label">Base cost</span><span id="r-base"></span></div>
+        <div class="result-row"><span class="result-label">Condition adjustment</span><span id="r-cond-adj"></span></div>
+        <div class="result-row"><span class="result-label">Add-ons</span><span id="r-addon"></span></div>
+        <div class="result-row"><span class="result-label">Suggested range (±10%)</span><span id="r-range" style="color:var(--text2);font-size:13px;"></span></div>
+        <div class="result-row"><span>Recommended quote</span><span id="r-total" style="color:var(--success-text);font-size:16px;"></span></div>
+        <p class="note" id="r-note"></p>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn btn-sm btn-primary" onclick="sendToTracker()">Add to job tracker</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TRACKER ── -->
+  <div id="panel-tracker" class="panel">
+    <div class="metric-grid">
+      <div class="metric"><div class="metric-label">Leads & quoted</div><div class="metric-val" id="m-leads">—</div></div>
+      <div class="metric"><div class="metric-label">Active jobs</div><div class="metric-val" id="m-active">—</div></div>
+      <div class="metric"><div class="metric-label">Pipeline value</div><div class="metric-val" id="m-pipeline">—</div></div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <span class="card-title" style="margin-bottom:0;">All jobs & leads</span>
+        <button class="btn btn-sm btn-primary" onclick="openJobModal()">+ Add job</button>
+      </div>
+      <div id="job-table"><p class="empty"><span class="spinner"></span> Loading...</p></div>
+      <div class="modal-wrap" id="job-modal">
+        <div class="modal">
+          <div class="modal-title" id="job-modal-title">Add job / lead</div>
+          <div class="row">
+            <div class="field"><label>Client name</label><input type="text" id="jm-client"></div>
+            <div class="field"><label>Location</label><input type="text" id="jm-location"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Coating type</label><input type="text" id="jm-type" placeholder="e.g. Metallic epoxy"></div>
+            <div class="field"><label>Estimated value ($)</label><input type="number" id="jm-value"></div>
+          </div>
+          <div class="field" style="margin-bottom:10px;"><label>Status</label>
+            <select id="jm-status">
+              <option value="lead">Lead</option>
+              <option value="quoted">Quoted</option>
+              <option value="active">Active job</option>
+              <option value="done">Completed</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:14px;"><label>Notes</label><input type="text" id="jm-notes" placeholder="Optional"></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="saveJob()" id="jm-save-btn">Save</button>
+            <button class="btn btn-sm" onclick="closeJobModal()">Cancel</button>
+            <button class="btn btn-sm btn-danger" id="jm-delete-btn" style="margin-left:auto;display:none;" onclick="deleteJob()">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OUTREACH ── -->
+  <div id="panel-outreach" class="panel">
+    <div class="metric-grid">
+      <div class="metric"><div class="metric-label"><span class="status-dot dot-pending"></span>Pending</div><div class="metric-val" id="cnt-pending">—</div></div>
+      <div class="metric"><div class="metric-label"><span class="status-dot dot-sent"></span>Sent</div><div class="metric-val" id="cnt-sent">—</div></div>
+      <div class="metric"><div class="metric-label"><span class="status-dot dot-replied"></span>Replied</div><div class="metric-val" id="cnt-replied">—</div></div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <span class="card-title" style="margin-bottom:0;">GC contacts</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm" onclick="markAllSent()">Mark all sent</button>
+          <button class="btn btn-sm btn-primary" onclick="openGCModal()">+ Add contact</button>
+        </div>
+      </div>
+      <div id="gc-list"><p class="empty"><span class="spinner"></span> Loading...</p></div>
+      <div class="modal-wrap" id="gc-modal">
+        <div class="modal">
+          <div class="modal-title" id="gc-modal-title">Add GC contact</div>
+          <div class="row">
+            <div class="field"><label>Company name</label><input type="text" id="gcm-company"></div>
+            <div class="field"><label>Contact name</label><input type="text" id="gcm-contact"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Email</label><input type="email" id="gcm-email"></div>
+            <div class="field"><label>Phone</label><input type="tel" id="gcm-phone"></div>
+          </div>
+          <div class="field" style="margin-bottom:10px;"><label>Status</label>
+            <select id="gcm-status">
+              <option value="pending">Pending</option>
+              <option value="sent">Sent</option>
+              <option value="replied">Replied</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:14px;"><label>Notes</label><input type="text" id="gcm-notes" placeholder="Optional"></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="saveGC()" id="gcm-save-btn">Save</button>
+            <button class="btn btn-sm" onclick="closeGCModal()">Cancel</button>
+            <button class="btn btn-sm btn-danger" id="gcm-delete-btn" style="margin-left:auto;display:none;" onclick="deleteGC()">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LS = { url:'archon_script_url', rates:'archon_rates_cache' };
+const DEF_RATES = { solid:3.50, flake:4.50, metallic:7.00, poly:5.50, esd:9.00 };
+const TYPE_NAMES = { solid:'Standard solid epoxy', flake:'Flake / chip', metallic:'Metallic epoxy', poly:'Polyaspartic', esd:'ESD / specialty' };
+
+let scriptUrl = localStorage.getItem(LS.url) || '';
+let rates = JSON.parse(localStorage.getItem(LS.rates) || 'null') || {...DEF_RATES};
+let jobs = [];
+let gcs  = [];
+let editJobId  = null;
+let editGCId   = null;
+let lastEst    = null;
+
+function toast(msg, dur=2000){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), dur); }
+function fmt(n){ return '$'+Math.round(n).toLocaleString(); }
+function setSyncStatus(state, label){
+  const dot=document.getElementById('sync-dot');
+  const lbl=document.getElementById('sync-label');
+  dot.className='sync-dot'+(state?' '+state:'');
+  lbl.textContent=label;
+}
+
+async function api(params){
+  if(!scriptUrl) throw new Error('Not connected');
+  const url = scriptUrl + '?' + new URLSearchParams(params);
+  const res = await fetch(url);
+  const data = await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+
+async function apiPost(body){
+  if(!scriptUrl) throw new Error('Not connected');
+  const res = await fetch(scriptUrl, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body),
+    redirect:'follow'
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+
+async function connectSheet(){
+  const input = document.getElementById('script-url').value.trim();
+  if(!input || !input.startsWith('https://script.google.com')) {
+    toast('Please paste a valid Apps Script URL'); return;
+  }
+  scriptUrl = input;
+  setSyncStatus('loading','Connecting...');
+  try {
+    await loadAll();
+    localStorage.setItem(LS.url, scriptUrl);
+    setSyncStatus('ok','Connected to Google Sheets');
+    toast('Connected!');
+    document.getElementById('dismiss-btn').style.display='inline-block';
+    document.getElementById('setup-banner').querySelector('h3').textContent='Connected to Google Sheets';
+  } catch(e){
+    setSyncStatus('err','Connection failed');
+    toast('Could not connect — check the URL and try again', 3000);
+  }
+}
+
+function dismissSetup(){ document.getElementById('setup-banner').style.display='none'; }
+
+async function loadAll(){
+  setSyncStatus('loading','Syncing...');
+  try {
+    const [jobData, gcData, rateData] = await Promise.all([
+      api({action:'getAll', sheet:'Jobs'}),
+      api({action:'getAll', sheet:'GC Contacts'}),
+      api({action:'getRates'})
+    ]);
+    jobs = jobData || [];
+    gcs  = gcData  || [];
+    if(rateData) { rates={...DEF_RATES,...rateData}; localStorage.setItem(LS.rates, JSON.stringify(rates)); }
+    renderJobs(); renderGCs(); renderRates();
+    setSyncStatus('ok','Synced');
+  } catch(e){
+    setSyncStatus('err','Sync error');
+    renderJobs(); renderGCs();
+  }
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{ t.classList.toggle('active',['estimator','tracker','outreach'][i]===name); });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+}
+
+function renderRates(){
+  ['solid','flake','metallic','poly','esd'].forEach(k=>{
+    const el=document.getElementById('dv-'+k);
+    if(el) el.textContent='$'+rates[k].toFixed(2)+'/sqft';
+  });
+}
+function toggleRates(){
+  const v=document.getElementById('rates-view'), e=document.getElementById('rates-edit'), btn=document.getElementById('rate-btn');
+  if(e.style.display==='none'){
+    ['solid','flake','metallic','poly','esd'].forEach(k=>document.getElementById('er-'+k).value=rates[k]);
+    v.style.display='none'; e.style.display='block'; btn.textContent='Cancel';
+  } else cancelRates();
+}
+function cancelRates(){ document.getElementById('rates-view').style.display='block'; document.getElementById('rates-edit').style.display='none'; document.getElementById('rate-btn').textContent='Edit rates'; }
+async function saveRates(){
+  ['solid','flake','metallic','poly','esd'].forEach(k=>{ const v=parseFloat(document.getElementById('er-'+k).value); if(!isNaN(v)&&v>0) rates[k]=v; });
+  localStorage.setItem(LS.rates, JSON.stringify(rates));
+  renderRates(); cancelRates();
+  if(scriptUrl){ try{ await apiPost({action:'saveRates', rates}); toast('Rates saved'); }catch(e){ toast('Saved locally'); } }
+  else toast('Rates saved locally');
+}
+
+function calcEst(){
+  const sqft=parseFloat(document.getElementById('est-sqft').value);
+  if(!sqft||sqft<=0) return;
+  const type=document.getElementById('est-type').value;
+  const condMult=parseFloat(document.getElementById('est-cond').value);
+  const addon=parseFloat(document.getElementById('est-addon').value)||0;
+  const rate=rates[type];
+  const base=sqft*rate, condAdj=base*(condMult-1), sub=base+condAdj+addon;
+  const condLabels={'1':'good','1.15':'fair','1.30':'poor'};
+  document.getElementById('r-base').textContent=fmt(base);
+  document.getElementById('r-cond-adj').textContent=condMult>1?('+'+fmt(condAdj)):'$0';
+  document.getElementById('r-addon').textContent=addon>0?('+'+fmt(addon)):'$0';
+  document.getElementById('r-range').textContent=fmt(sub*0.9)+' – '+fmt(sub*1.1);
+  document.getElementById('r-total').textContent=fmt(sub);
+  document.getElementById('r-note').textContent='$'+rate.toFixed(2)+'/sqft · '+Math.round(sqft).toLocaleString()+' sqft · '+(condLabels[String(condMult)]||'')+' concrete';
+  document.getElementById('est-result').style.display='block';
+  lastEst={ client:document.getElementById('est-client').value||'Unnamed client', location:document.getElementById('est-location').value||'—', type:TYPE_NAMES[type]||type, value:Math.round(sub), status:'quoted', notes:'' };
+}
+
+async function sendToTracker(){
+  if(!lastEst) return;
+  try {
+    setSyncStatus('loading','Saving...');
+    const res = await apiPost({action:'save', sheet:'Jobs', data:{...lastEst}});
+    lastEst.id = res.id;
+    jobs.push({...lastEst});
+    renderJobs(); switchTab('tracker');
+    setSyncStatus('ok','Synced'); toast('Added to job tracker');
+  } catch(e){ toast('Not connected — connect sheet to save'); }
+}
+
+function renderJobs(){
+  const el=document.getElementById('job-table');
+  if(jobs.length===0){ el.innerHTML='<p class="empty">No jobs yet. Add one above or use the estimator.</p>'; }
+  else {
+    const bm={lead:'badge-lead',quoted:'badge-quoted',active:'badge-active',done:'badge-done'};
+    const lm={lead:'Lead',quoted:'Quoted',active:'Active',done:'Completed'};
+    el.innerHTML='<table><thead><tr><th>Client</th><th>Location</th><th>Type</th><th>Value</th><th>Status</th><th></th></tr></thead><tbody>'+
+      jobs.map(j=>`<tr><td style="font-weight:500;">${j.client}</td><td style="color:var(--text2);">${j.location}</td><td style="color:var(--text2);">${j.type}</td><td>${j.value?fmt(j.value):'—'}</td><td><span class="badge ${bm[j.status]||'badge-lead'}">${lm[j.status]||j.status}</span></td><td><button class="btn btn-sm" onclick="openJobModal('${j.id}')" style="padding:3px 8px;font-size:11px;">Edit</button></td></tr>`).join('')+'</tbody></table>';
+  }
+  document.getElementById('m-leads').textContent=jobs.filter(j=>j.status==='lead'||j.status==='quoted').length;
+  document.getElementById('m-active').textContent=jobs.filter(j=>j.status==='active').length;
+  document.getElementById('m-pipeline').textContent=fmt(jobs.filter(j=>j.status!=='done').reduce((s,j)=>s+(parseFloat(j.value)||0),0));
+}
+
+function openJobModal(id){
+  editJobId = id || null;
+  document.getElementById('job-modal-title').textContent = editJobId ? 'Edit job' : 'Add job / lead';
+  document.getElementById('jm-delete-btn').style.display = editJobId ? 'inline-block' : 'none';
+  if(editJobId){ const j=jobs.find(x=>String(x.id)===String(editJobId))||{}; document.getElementById('jm-client').value=j.client||''; document.getElementById('jm-location').value=j.location||''; document.getElementById('jm-type').value=j.type||''; document.getElementById('jm-value').value=j.value||''; document.getElementById('jm-status').value=j.status||'lead'; document.getElementById('jm-notes').value=j.notes||''; }
+  else { ['jm-client','jm-location','jm-type','jm-value','jm-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('jm-status').value='lead'; }
+  document.getElementById('job-modal').classList.add('open');
+}
+function closeJobModal(){ document.getElementById('job-modal').classList.remove('open'); editJobId=null; }
+async function saveJob(){
+  const client=document.getElementById('jm-client').value.trim(); if(!client) return;
+  const data={ id:editJobId||undefined, client, location:document.getElementById('jm-location').value||'—', type:document.getElementById('jm-type').value||'—', value:parseFloat(document.getElementById('jm-value').value)||0, status:document.getElementById('jm-status').value, notes:document.getElementById('jm-notes').value||'' };
+  const btn=document.getElementById('jm-save-btn'); btn.disabled=true; btn.textContent='Saving...';
+  try {
+    const res = await apiPost({action:'save', sheet:'Jobs', data});
+    if(!editJobId){ data.id=res.id; jobs.push(data); } else { const i=jobs.findIndex(x=>String(x.id)===String(editJobId)); if(i>-1) jobs[i]=data; }
+    renderJobs(); closeJobModal(); setSyncStatus('ok','Synced'); toast('Saved');
+  } catch(e){ toast('Not connected — connect sheet to save'); }
+  btn.disabled=false; btn.textContent='Save';
+}
+async function deleteJob(){
+  if(!editJobId) return;
+  try { await apiPost({action:'delete', sheet:'Jobs', id:editJobId}); jobs=jobs.filter(j=>String(j.id)!==String(editJobId)); renderJobs(); closeJobModal(); toast('Deleted'); setSyncStatus('ok','Synced'); }
+  catch(e){ toast('Delete failed'); }
+}
+
+function renderGCs(){
+  const el=document.getElementById('gc-list');
+  const dm={pending:'dot-pending',sent:'dot-sent',replied:'dot-replied'};
+  const lm={pending:'Pending',sent:'Sent',replied:'Replied'};
+  if(gcs.length===0){ el.innerHTML='<p class="empty">No contacts yet — add your first GC above.</p>'; }
+  else { el.innerHTML=gcs.map(g=>`<div class="gc-item"><div><div class="gc-name">${g.company}</div><div class="gc-sub">${g.contact||''}${g.email?' · '+g.email:''}</div></div><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:12px;color:var(--text2);white-space:nowrap;"><span class="status-dot ${dm[g.status]}"></span>${lm[g.status]||g.status}</span><button class="btn btn-sm" onclick="openGCModal('${g.id}')" style="padding:3px 8px;font-size:11px;">Edit</button></div></div>`).join(''); }
+  document.getElementById('cnt-pending').textContent=gcs.filter(g=>g.status==='pending').length;
+  document.getElementById('cnt-sent').textContent=gcs.filter(g=>g.status==='sent').length;
+  document.getElementById('cnt-replied').textContent=gcs.filter(g=>g.status==='replied').length;
+}
+
+function openGCModal(id){
+  editGCId = id || null;
+  document.getElementById('gc-modal-title').textContent = editGCId ? 'Edit contact' : 'Add GC contact';
+  document.getElementById('gcm-delete-btn').style.display = editGCId ? 'inline-block' : 'none';
+  if(editGCId){ const g=gcs.find(x=>String(x.id)===String(editGCId))||{}; document.getElementById('gcm-company').value=g.company||''; document.getElementById('gcm-contact').value=g.contact||''; document.getElementById('gcm-email').value=g.email||''; document.getElementById('gcm-phone').value=g.phone||''; document.getElementById('gcm-status').value=g.status||'pending'; document.getElementById('gcm-notes').value=g.notes||''; }
+  else { ['gcm-company','gcm-contact','gcm-email','gcm-phone','gcm-notes'].forEach(id=>document.getElementById(id).value=''); document.getElementById('gcm-status').value='pending'; }
+  document.getElementById('gc-modal').classList.add('open');
+}
+function closeGCModal(){ document.getElementById('gc-modal').classList.remove('open'); editGCId=null; }
+async function saveGC(){
+  const company=document.getElementById('gcm-company').value.trim(); if(!company) return;
+  const data={ id:editGCId||undefined, company, contact:document.getElementById('gcm-contact').value||'', email:document.getElementById('gcm-email').value||'', phone:document.getElementById('gcm-phone').value||'', status:document.getElementById('gcm-status').value, notes:document.getElementById('gcm-notes').value||'' };
+  const btn=document.getElementById('gcm-save-btn'); btn.disabled=true; btn.textContent='Saving...';
+  try {
+    const res = await apiPost({action:'save', sheet:'GC Contacts', data});
+    if(!editGCId){ data.id=res.id; gcs.push(data); } else { const i=gcs.findIndex(x=>String(x.id)===String(editGCId)); if(i>-1) gcs[i]=data; }
+    renderGCs(); closeGCModal(); setSyncStatus('ok','Synced'); toast('Saved');
+  } catch(e){ toast('Not connected — connect sheet to save'); }
+  btn.disabled=false; btn.textContent='Save';
+}
+async function deleteGC(){
+  if(!editGCId) return;
+  try { await apiPost({action:'delete', sheet:'GC Contacts', id:editGCId}); gcs=gcs.filter(g=>String(g.id)!==String(editGCId)); renderGCs(); closeGCModal(); toast('Deleted'); setSyncStatus('ok','Synced'); }
+  catch(e){ toast('Delete failed'); }
+}
+async function markAllSent(){
+  const pending=gcs.filter(g=>g.status==='pending');
+  for(const g of pending){ g.status='sent'; try{ await apiPost({action:'save', sheet:'GC Contacts', data:g}); }catch(e){} }
+  renderGCs(); toast('Marked '+pending.length+' as sent');
+}
+
+renderRates();
+if(scriptUrl){
+  document.getElementById('script-url').value=scriptUrl;
+  document.getElementById('dismiss-btn').style.display='inline-block';
+  loadAll();
+} else {
+  document.getElementById('job-table').innerHTML='<p class="empty">Connect to Google Sheets above to load data.</p>';
+  document.getElementById('gc-list').innerHTML='<p class="empty">Connect to Google Sheets above to load data.</p>';
+  ['m-leads','m-active','m-pipeline','cnt-pending','cnt-sent','cnt-replied'].forEach(id=>document.getElementById(id).textContent='—');
+}
+</script>
+</body>
+</html>
