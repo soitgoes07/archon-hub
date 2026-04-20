@@ -520,7 +520,8 @@ async function saveJob(){
   const btn=document.getElementById('jm-save-btn'); btn.disabled=true; btn.textContent='Saving...';
   try {
     const res=await api({action:'save', sheet:'Jobs', ...data});
-    if(!editJobId){ data.id=res.id; jobs.push(data); } else { const i=jobs.findIndex(x=>String(x.id)===String(editJobId)); if(i>-1) jobs[i]=data; }
+    const newId = (res && res.id) ? res.id : (editJobId || Date.now().toString());
+    if(!editJobId){ data.id=newId; jobs.push(data); } else { const i=jobs.findIndex(x=>String(x.id)===String(editJobId)); if(i>-1) jobs[i]=data; }
     renderJobs(); closeJobModal(); setSyncStatus('ok','Synced'); toast('Saved');
   } catch(e){ toast('Save failed: '+e.message, 3000); setSyncStatus('err','Save failed'); }
   btn.disabled=false; btn.textContent='Save';
@@ -558,7 +559,8 @@ async function saveGC(){
   const btn=document.getElementById('gcm-save-btn'); btn.disabled=true; btn.textContent='Saving...';
   try {
     const res=await api({action:'save', sheet:'GC Contacts', ...data});
-    if(!editGCId){ data.id=res.id; gcs.push(data); } else { const i=gcs.findIndex(x=>String(x.id)===String(editGCId)); if(i>-1) gcs[i]=data; }
+    const newId = (res && res.id) ? res.id : (editGCId || Date.now().toString());
+    if(!editGCId){ data.id=newId; gcs.push(data); } else { const i=gcs.findIndex(x=>String(x.id)===String(editGCId)); if(i>-1) gcs[i]=data; }
     renderGCs(); closeGCModal(); setSyncStatus('ok','Synced'); toast('Saved');
   } catch(e){ toast('Save failed: '+e.message, 3000); setSyncStatus('err','Save failed'); }
   btn.disabled=false; btn.textContent='Save';
