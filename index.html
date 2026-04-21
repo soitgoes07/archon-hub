@@ -25,7 +25,7 @@
     }
   }
   body { font-family:var(--font); background:var(--bg3); color:var(--text); font-size:15px; min-height:100vh; }
-  .app { max-width:960px; margin:0 auto; padding:1.5rem 1rem 4rem; }
+  .app { max-width:100%; margin:0 auto; padding:1.5rem 2rem 4rem; }
   .app-header { display:flex; align-items:center; gap:12px; margin-bottom:1.5rem; flex-wrap:wrap; }
   .app-title { font-size:20px; font-weight:500; }
   .app-sub { font-size:13px; color:var(--text2); flex:1; }
@@ -463,23 +463,65 @@ async function sendToTracker(){
   } catch(e){ toast('Save failed: '+e.message, 3000); setSyncStatus('err','Save failed'); }
 }
 
+let sortCol = null;
+let sortDir = 1;
+
+function sortJobs(col){
+  if(sortCol===col){ sortDir*=-1; } else { sortCol=col; sortDir=1; }
+  renderJobs();
+}
+
 function renderJobs(){
   const el=document.getElementById('job-table');
   if(!jobs.length){ el.innerHTML='<p class="empty">No jobs yet. Add one or use the estimator.</p>'; }
   else {
     const bm={lead:'badge-lead',quoted:'badge-quoted',active:'badge-active',done:'badge-done'};
     const lm={lead:'Lead',quoted:'Quoted',active:'Active',done:'Completed'};
-    el.innerHTML='<table><thead><tr><th>Job name</th><th>GC</th><th>Client</th><th>Contact</th><th>Location</th><th>Type</th><th>Value</th><th>Status</th><th>Submitted</th><th>Follow-up</th><th></th></tr></thead><tbody>'+
-      jobs.map(j=>{
+    const statusOrder={lead:0,quoted:1,active:2,done:3};
+
+    let sorted=[...jobs];
+    if(sortCol){
+      sorted.sort((a,b)=>{
+        let av=a[sortCol]||'', bv=b[sortCol]||'';
+        if(sortCol==='value'){ av=parseFloat(av)||0; bv=parseFloat(bv)||0; return (av-bv)*sortDir; }
+        if(sortCol==='status'){ av=statusOrder[av]??9; bv=statusOrder[bv]??9; return (av-bv)*sortDir; }
+        return String(av).localeCompare(String(bv))*sortDir;
+      });
+    }
+
+    const cols=[
+      {label:'Job name', key:'jobname'},
+      {label:'GC', key:'gcname'},
+      {label:'Client', key:'client'},
+      {label:'Contact', key:'clientcontact'},
+      {label:'Location', key:'location'},
+      {label:'Type', key:'type'},
+      {label:'Value', key:'value'},
+      {label:'Status', key:'status'},
+      {label:'Submitted', key:'submitted'},
+      {label:'Follow-up', key:'followup'},
+    ];
+
+    const arrow=(key)=>{
+      if(sortCol!==key) return '<span style="opacity:0.3;font-size:10px;margin-left:3px;">&#8597;</span>';
+      return sortDir===1?'<span style="font-size:10px;margin-left:3px;">&#8593;</span>':'<span style="font-size:10px;margin-left:3px;">&#8595;</span>';
+    };
+
+    const headers = cols.map(c=>
+      `<th style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="sortJobs('${c.key}')">${c.label}${arrow(c.key)}</th>`
+    ).join('') + '<th></th>';
+
+    el.innerHTML='<table><thead><tr>'+headers+'</tr></thead><tbody>'+
+      sorted.map(j=>{
         const fc=followupClass(j.followup);
         const fuDisplay=j.followup?`<span class="${fc}">${fmtDate(j.followup)}</span>`:'—';
         return `<tr>
           <td style="font-weight:500;">${j.jobname||'—'}</td>
           <td style="color:var(--text2);">${j.gcname||'—'}</td>
-          <td style="color:var(--text2);">${j.client}</td>
+          <td style="color:var(--text2);">${j.client||'—'}</td>
           <td style="color:var(--text2);">${j.clientcontact||'—'}</td>
-          <td style="color:var(--text2);">${j.location}</td>
-          <td style="color:var(--text2);">${j.type}</td>
+          <td style="color:var(--text2);">${j.location||'—'}</td>
+          <td style="color:var(--text2);">${j.type||'—'}</td>
           <td>${j.value?fmt(j.value):'—'}</td>
           <td><span class="badge ${bm[j.status]||'badge-lead'}">${lm[j.status]||j.status}</span></td>
           <td style="color:var(--text2);">${fmtDate(j.submitted)}</td>
